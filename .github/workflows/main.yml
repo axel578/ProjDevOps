@@ -1,9 +1,9 @@
 name: CI devops 2023
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
 
 jobs:
   test-backend: 
@@ -27,7 +27,7 @@ jobs:
     needs: test-backend
      # run only when code is compiling and tests are passing
     runs-on: ubuntu-22.04
-    if: branch == 'master'
+    if: github.ref == 'refs/heads/master'
      # steps to perform in job
     steps:
       - name: Checkout code
