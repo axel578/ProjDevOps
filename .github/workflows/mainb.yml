@@ -1,1 +1,49 @@
+name: CI devops 2023_2
+on:
+  workflow_run:
+    workflows: [CI devops 2023]
+    types:
+      - completed
+  push:
+    branches: [ "master", "dev" ]
+  pull_request:
+    branches: [ "master", "dev" ]
+
+jobs:
+  # define job to build and publish docker image
+  build-and-push-docker-image:
+     # run only when code is compiling and tests are passing
+    runs-on: ubuntu-22.04
+    if: github.ref == 'refs/heads/master'
+     # steps to perform in job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image and push backend
+        uses: docker/build-push-action@v3
+        with:
+          # relative path to the place where source code with Dockerfile is located
+          context: ./API_TP2/simple-api-student-main
+           # Note: tags has to be all lower-case
+          tags:  ${{secrets.DOCKERHUB_USERNAME}}/web_backend
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build image and push database
+           # DO the same for database
+        uses: docker/build-push-action@v3
+        with:
+          context: ./BDD
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/web_db
+          push: ${{ github.ref == 'refs/heads/main' }}
+      - name: Build image and push httpd
+         # DO the same for httpd
+        uses: docker/build-push-action@v3
+        with:
+          context: ./HTTP
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/web_httpd
+          push: ${{ github.ref == 'refs/heads/main' }}
 
