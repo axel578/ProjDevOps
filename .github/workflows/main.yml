@@ -21,4 +21,4 @@ jobs:
           cache: maven
      #finally build your app with the latest command
       - name: Build and test with Maven
-        run: mvn clean test
+        run: mvn --file API_2/simple-api-student-main/pom.xml clean test
