@@ -145,4 +145,118 @@ docker tag web_db awel899/web_db:1.0
 And we push :
 docker push awel899/web_db:1.0
 
+docker tag web_backend awel899/web_backend:1.0 && docker push awel899/web_backend:1.0
+docker tag web_httpd awel899/web_httpd:1.0 && docker push awel899/web_httpd:1.0
+
 The same for the other application
+
+## PART 2 (TP2)
+
+#### 2-1 What are testcontainers?
+
+testcontainers are JUnit tests that can be runned in docker.
+
+#### 2-2 Document your Github Actions configurations.
+
+```yaml
+name: CI devops 2023
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  test-backend: 
+    runs-on: ubuntu-22.04
+    steps:
+     #checkout your github code using actions/checkout@v2.5.0
+      - uses: actions/checkout@v3
+
+     #do the same with another action (actions/setup-java@v3) that enable to setup jdk 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with: 
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+     #finally build your app with the latest command
+      - name: Build and test with Maven
+        run: mvn --file API_2/simple-api-student-main/pom.xml clean test
+```
+
+I have only one branch master, we fist install the open jdk 17 from temurin with maven cache.
+Then we build and test with maven with the specified pom.xml
+
+
+#### Document your quality gate configuration.
+
+Here is first the full configuration github action :
+```yaml
+name: CI devops 2023
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  test-backend: 
+    runs-on: ubuntu-22.04
+    steps:
+     #checkout your github code using actions/checkout@v2.5.0
+      - uses: actions/checkout@v3
+
+     #do the same with another action (actions/setup-java@v3) that enable to setup jdk 17 -
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with: 
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+     #finally build your app with the latest command
+      - name: Build and test with Maven
+        run: mvn -B verify sonar:sonar -Dsonar.projectKey=axel578_ProjDevOps -Dsonar.organization=axel578 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file API_2/simple-api-student-main/pom.xml
+  # define job to build and publish docker image
+  build-and-push-docker-image:
+    needs: test-backend
+     # run only when code is compiling and tests are passing
+    runs-on: ubuntu-22.04
+
+     # steps to perform in job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to DockerHub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image and push backend
+        uses: docker/build-push-action@v3
+        with:
+          # relative path to the place where source code with Dockerfile is located
+          context: ./API_TP2/simple-api-student-main
+           # Note: tags has to be all lower-case
+          tags:  ${{secrets.DOCKERHUB_USERNAME}}/web_backend
+          push: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build image and push database
+           # DO the same for database
+        uses: docker/build-push-action@v3
+        with:
+          context: ./BDD
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/web_db
+          push: ${{ github.ref == 'refs/heads/main' }}
+      - name: Build image and push httpd
+         # DO the same for httpd
+        uses: docker/build-push-action@v3
+        with:
+          context: ./HTTP
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/web_httpd
+          push: ${{ github.ref == 'refs/heads/main' }}
+```
+
+But the quality gate configuration is :
+```
+run: mvn -B verify sonar:sonar -Dsonar.projectKey=axel578_ProjDevOps -Dsonar.organization=axel578 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file API_2/simple-api-student-main/pom.xml
+```
