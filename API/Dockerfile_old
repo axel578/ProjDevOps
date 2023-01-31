@@ -1,0 +1,25 @@
+##FROM openjdk:11
+#COPY ./src/main/java/com/example/Argent /usr/src/myapp
+#WORKDIR /usr/src/myapp
+#RUN javac ArgentApplication.java
+#CMD ["java", "ArgentApplication"]
+
+FROM openjdk:17
+
+#RUN ./mvnw clean package
+CMD ["mvnw", "clean", "package"]
+
+WORKDIR /app
+
+COPY ./src /app/src
+COPY ./pom.xml /app
+
+
+COPY ./target/Argent-0.0.1-SNAPSHOT.jar /app/app.jar
+
+EXPOSE 8081
+
+CMD ["java", "-jar", "app.jar"]
+
+#docker build -t my-java-app .
+#docker run -it --rm --name my-java-api my-java-app

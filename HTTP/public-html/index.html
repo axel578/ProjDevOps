@@ -1,0 +1,15 @@
+<p>
+    test
+</p>
+<script>
+    fetch('http://localhost:8081', {
+        method: 'GET', // or 'PUT'
+        })
+        .then((response) => response.text())
+        .then((data) => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+</script>

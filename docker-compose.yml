@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+    backend:
+        build: ./API_2/simple-api-student-main
+        container_name: my-java-api
+        networks:
+        - app-network
+        ports:
+        - 8080:8080
+        depends_on:
+        - db
+    db:
+        container_name: bdd_pg
+        build: ./BDD
+        ports:
+        - 5432:5432
+        networks:
+        - app-network
+        environment:
+        - POSTGRES_DB=db
+        - POSTGRES_USER=usr
+        - POSTGRES_PASSWORD=pwd
+        volumes:
+        - /my/own/datadir:/var/lib/postgresql/data
+    httpd:
+        build: ./HTTP
+        ports:
+        - 80:80
+        networks:
+        - app-network
+        depends_on:
+        - backend
+
+networks:
+    app-network:
+      driver: bridge

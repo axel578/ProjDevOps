@@ -1,0 +1,14 @@
+FROM maven:3.8.6-amazoncorretto-17 AS build
+WORKDIR /app
+COPY ./src /app/src
+COPY ./pom.xml /app
+#RUN ./mvn clean package
+RUN ["mvn", "clean", "package"]
+
+FROM amazoncorretto:17
+COPY --from=build /app/target/Argent-0.0.1-SNAPSHOT.jar /app/app.jar
+EXPOSE 8081
+CMD ["java", "-jar", "/app/app.jar"]
+
+#docker build -t my-java-app .
+#docker run -it --rm --name my-java-api my-java-app
