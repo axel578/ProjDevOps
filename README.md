@@ -22,6 +22,19 @@
       - [2-2 Document your Github Actions configurations.](#2-2-document-your-github-actions-configurations)
       - [Document your quality gate configuration.](#document-your-quality-gate-configuration)
 - [Part 3 (TP3)](#part-3-tp3)
+      - [3-1 Document your inventory and base commands](#3-1-document-your-inventory-and-base-commands)
+      - [3-2 Document your playbook](#3-2-document-your-playbook)
+      - [Document your docker\_container tasks configuration.](#document-your-docker_container-tasks-configuration)
+          - [For the main playbook file:](#for-the-main-playbook-file)
+          - [for docker:](#for-docker)
+          - [for network:](#for-network)
+          - [for BDD :](#for-bdd-)
+          - [for APP :](#for-app-)
+          - [for apache (proxy):](#for-apache-proxy)
+        - [for front :](#for-front-)
+        - [The command to run :](#the-command-to-run-)
+        - [The Front](#the-front)
+  - [Extra](#extra)
 
 
 # PART 1 (TP1)
@@ -293,3 +306,182 @@ run: mvn -B verify sonar:sonar -Dsonar.projectKey=axel578_ProjDevOps -Dsonar.org
 # Part 3 (TP3)
 
 I have successfully build the front, configured the docker for load balancer on apache and the front.
+
+#### 3-1 Document your inventory and base commands
+
+here is the ```project/ansible/inventories/setup.yml``` file :
+```
+all:
+ vars:
+   ansible_user: centos
+   ansible_ssh_private_key_file: ~/id_rsa
+ children:
+   prod:
+     hosts: axel.esch.takima.cloud
+```
+
+#### 3-2 Document your playbook
+
+I have the docker installation in the docker role task folder
+and playbook looks like this :
+```
+- name: all
+  roles:
+    - docker
+```
+#### Document your docker_container tasks configuration.
+
+###### For the main playbook file:
+```
+- name: all
+  roles:
+    - docker
+    - network
+    - database
+    - app
+    - proxy
+```
+
+###### for docker:
+```
+- hosts: all
+  gather_facts: false
+  become: yes
+
+# Install Docker
+  tasks:
+  - name: Clean packages
+    command:
+      cmd: dnf clean -y packages
+
+  - name: Install device-mapper-persistent-data
+    dnf:
+      name: device-mapper-persistent-data
+      state: latest
+
+  - name: Install lvm2
+    dnf:
+      name: lvm2
+      state: latest
+
+  - name: add repo docker
+    command:
+      cmd: sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+  - name: Install Docker
+    dnf:
+      name: docker-ce
+      state: present
+
+  - name: install python3
+    dnf:
+      name: python3
+
+  - name: Pip install
+    pip:
+      name: docker
+
+  - name: Make sure Docker is running
+    service: name=docker state=started
+    tags: docker
+
+```
+
+###### for network:
+```
+  # here I create a configuration for the network which will belong the front/bdd/api/proxy
+  - name: Create Docker network
+    docker_network:
+        name: app-network
+        driver: bridge
+        state: present
+
+```
+
+###### for BDD :
+```
+  # Here I create and start the BDD on my image (web_db)
+  # We use a specific volume to have a persistant bdd
+  # We create environment variables for bdd connection
+  # We specify the external and internal port 5432 that postgre sql uses
+  - name: Start BDD
+    docker_container:
+        name: bdd_pg
+        image: awel899/web_db:1.0
+        env:
+          POSTGRES_DB: db
+          POSTGRES_USER: usr
+          POSTGRES_PASSWORD: pwd
+        ports:
+        - 5432:5432
+        networks:
+        - name: app-network
+        state: started
+        volumes:
+        - /bdd/dir:/var/lib/postgresql/data
+```
+
+###### for APP :
+```
+    # Here we create the api (that requires db) on port 8080
+    docker_container:
+        name: my-java-api
+        image: awel899/web_backend:1.0
+        ports:
+        - 8080:8080
+        networks:
+        - name: app-network
+        state: started
+        links:
+        - db:db
+```
+
+###### for apache (proxy):
+```
+  # The apache that behaves like a proxy between the front and the api
+  # We now can use in the future load balancing to ensure stability and availability
+  - name: http_front run
+    docker_container:
+        name: http_front
+        image: awel899/web_httpd:4.0
+        ports:
+        - 80:80
+        networks:
+        - name: app-network
+        state: started
+        links:
+        - my-java-api:my-java-api
+```
+
+##### for front :
+```
+  # The node JS front
+  - name: devops-front run
+    docker_container:
+        name: devops-front
+        image: awel899/front:4.0
+        ports:
+        - 82:82
+        networks:
+        - name: app-network
+        state: started
+        links:
+        - http_front:http_front
+```
+
+##### The command to run :
+
+Installation with playbook
+```
+ansible-playbook -i inventories/setup.yml playbook.yml
+```
+The playbook contains all the roles to be called and run
+
+
+
+##### The Front
+The front is working and available on axel.esch.takima.io
+
+## Extra
+
+Extra is working for load balancing and has been checked.
