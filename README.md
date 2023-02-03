@@ -1,4 +1,30 @@
-# DOCKER TP 1 - 2 - ESCH AXEL
+# TP DOCKER - 1/2/3 - ESCH AXEL
+
+## Table of contents
+
+- [TP DOCKER - 1/2/3 - ESCH AXEL](#tp-docker---123---esch-axel)
+  - [Table of contents](#table-of-contents)
+- [PART 1 (TP1)](#part-1-tp1)
+    - [**1-1 Document your database container essentials: commands and Dockerfile.**](#1-1-document-your-database-container-essentials-commands-and-dockerfile)
+      - [1-1-1. We specify the dockerfile for postgres:](#1-1-1-we-specify-the-dockerfile-for-postgres)
+      - [1.1.2 Wecreate the netowrk and run the command for postgres in BDD folder:](#112-wecreate-the-netowrk-and-run-the-command-for-postgres-in-bdd-folder)
+        - [note: we create a volume  /my/own/datadir -\> /var/lib/postgresql/data to avoid data losss](#note-we-create-a-volume--myowndatadir---varlibpostgresqldata-to-avoid-data-losss)
+      - [1.1.3 We run adminer in the same network as the BDD :](#113-we-run-adminer-in-the-same-network-as-the-bdd-)
+      - [1.1.4 We connect to the database from http://localhost:8090/?pgsql=mybddcontainer\&username=usr\&db=db\&ns=public](#114-we-connect-to-the-database-from-httplocalhost8090pgsqlmybddcontainerusernameusrdbdbnspublic)
+    - [**1.2 Why do we need a multistage build? And explain each step of this dockerfile.**](#12-why-do-we-need-a-multistage-build-and-explain-each-step-of-this-dockerfile)
+      - [1.2.1 From Docker configuration :](#121-from-docker-configuration-)
+    - [Explaination :](#explaination-)
+      - [1-3 Document docker-compose most important commands :](#1-3-document-docker-compose-most-important-commands-)
+      - [1-4 Document your docker-compose file :](#1-4-document-your-docker-compose-file-)
+      - [1-5 Document your publication commands and published images in dockerhub.](#1-5-document-your-publication-commands-and-published-images-in-dockerhub)
+- [PART 2 (TP2)](#part-2-tp2)
+      - [2-1 What are testcontainers?](#2-1-what-are-testcontainers)
+      - [2-2 Document your Github Actions configurations.](#2-2-document-your-github-actions-configurations)
+      - [Document your quality gate configuration.](#document-your-quality-gate-configuration)
+- [Part 3 (TP3)](#part-3-tp3)
+
+
+# PART 1 (TP1)
 
 ### **1-1 Document your database container essentials: commands and Dockerfile.**
 
@@ -123,7 +149,8 @@ services:
         - POSTGRES_PASSWORD=pwd
         volumes:
         - /my/own/datadir:/var/lib/postgresql/data
-   # Create apache confguration in the same networks at other so that the revere proxy is effective
+   # Create apache confguration in the same networks at other so that the revesre proxy is effective
+   # The reverse proxy permit overload managment ..
     httpd:
         build: ./HTTP
         ports:
@@ -150,7 +177,7 @@ docker tag web_httpd awel899/web_httpd:1.0 && docker push awel899/web_httpd:1.0
 
 The same for the other application
 
-## PART 2 (TP2)
+# PART 2 (TP2)
 
 #### 2-1 What are testcontainers?
 
@@ -256,7 +283,13 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' }}
 ```
 
+
 But the quality gate configuration is :
+
 ```
 run: mvn -B verify sonar:sonar -Dsonar.projectKey=axel578_ProjDevOps -Dsonar.organization=axel578 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}  --file API_2/simple-api-student-main/pom.xml
 ```
+
+# Part 3 (TP3)
+
+I have successfully build the front, configured the docker for load balancer on apache and the front.

@@ -1,13 +1,18 @@
 version: '3.7'
 
 services:
-    backend:
+    backend_2:
         build: ./API_2/simple-api-student-main
-        container_name: my-java-api
-        networks:
-        - app-network
+        container_name: my-java-api-2
         ports:
         - 8080:8080
+        depends_on:
+        - db
+    backend_1:
+        build: ./API_2/simple-api-student-main
+        container_name: my-java-api-1
+        ports:
+        - 8082:8080
         depends_on:
         - db
     db:
@@ -15,8 +20,6 @@ services:
         build: ./BDD
         ports:
         - 5432:5432
-        networks:
-        - app-network
         environment:
         - POSTGRES_DB=db
         - POSTGRES_USER=usr
@@ -24,13 +27,23 @@ services:
         volumes:
         - /my/own/datadir:/var/lib/postgresql/data
     httpd:
+        container_name: http_front
         build: ./HTTP
         ports:
-        - 80:80
-        networks:
-        - app-network
+        - 82:80
         depends_on:
-        - backend
+        - backend_1
+        - backend_2
+    httpd-2:
+        build: ./FRONT/devops-front
+        ports:
+        - 80:80
+        depends_on:
+        - httpd
+    graphana:
+        build: ./GRAPH/grafana-main
+        depends_on:
+        - httpd
 
 networks:
     app-network:
