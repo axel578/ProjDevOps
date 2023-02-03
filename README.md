@@ -24,7 +24,7 @@
 - [Part 3 (TP3)](#part-3-tp3)
       - [3-1 Document your inventory and base commands](#3-1-document-your-inventory-and-base-commands)
       - [3-2 Document your playbook](#3-2-document-your-playbook)
-      - [Document your docker\_container tasks configuration.](#document-your-docker_container-tasks-configuration)
+      - [3-3 Document your docker\_container tasks configuration.](#3-3-document-your-docker_container-tasks-configuration)
           - [For the main playbook file:](#for-the-main-playbook-file)
           - [for docker:](#for-docker)
           - [for network:](#for-network)
@@ -329,7 +329,7 @@ and playbook looks like this :
   roles:
     - docker
 ```
-#### Document your docker_container tasks configuration.
+#### 3-3 Document your docker_container tasks configuration.
 
 ###### For the main playbook file:
 ```
